@@ -22,7 +22,7 @@ MODELS_PATH = os.path.join(CAR_PATH, 'models')
 
 #VEHICLE
 DRIVE_LOOP_HZ = 20
-MAX_LOOPS = 100000
+MAX_LOOPS = 100000 # 100000 / 20 = 5000s or ~83 minutes
 
 #CAMERA
 CAMERA_RESOLUTION = (120, 160) #(height, width)

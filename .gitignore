@@ -12,3 +12,6 @@ lag_log.csv
 site/*
 build
 .idea
+simlogs/*
+trixie/data/*
+trixie/sim_data/*
