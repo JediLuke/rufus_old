@@ -47,8 +47,8 @@ def drive(cfg, model_path=None, use_joystick=False):
     V.add(cam, outputs=['cam/image_array'], threaded=True)
 
     #Filter
-    grey_filter = ImgGreyscale()
-    V.add(grey_filter, inputs=['cam/image_array'], outputs=['cam/filtered'])
+    #grey_filter = ImgGreyscale()
+    #V.add(grey_filter, inputs=['cam/image_array'], outputs=['cam/filtered'])
 
     #Controller
     if use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
@@ -62,7 +62,7 @@ def drive(cfg, model_path=None, use_joystick=False):
         #of managing steering, throttle, and modes, and more.
         ctr = LocalWebController()
     V.add(ctr, 
-          inputs=['cam/filtered'],
+          inputs=['cam/image_array'],
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
           threaded=True)
     
@@ -109,19 +109,19 @@ def drive(cfg, model_path=None, use_joystick=False):
           outputs=['angle', 'throttle'])
     
     
-    # steering_controller = PCA9685(cfg.STEERING_CHANNEL)
-    # steering = PWMSteering(controller=steering_controller,
-    #                                 left_pulse=cfg.STEERING_LEFT_PWM, 
-    #                                 right_pulse=cfg.STEERING_RIGHT_PWM)
+    steering_controller = PCA9685(cfg.STEERING_CHANNEL)
+    steering = PWMSteering(controller=steering_controller,
+                                    left_pulse=cfg.STEERING_LEFT_PWM, 
+                                    right_pulse=cfg.STEERING_RIGHT_PWM)
     
-    # throttle_controller = PCA9685(cfg.THROTTLE_CHANNEL)
-    # throttle = PWMThrottle(controller=throttle_controller,
-    #                                 max_pulse=cfg.THROTTLE_FORWARD_PWM,
-    #                                 zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
-    #                                 min_pulse=cfg.THROTTLE_REVERSE_PWM)
+    throttle_controller = PCA9685(cfg.THROTTLE_CHANNEL)
+    throttle = PWMThrottle(controller=throttle_controller,
+                                    max_pulse=cfg.THROTTLE_FORWARD_PWM,
+                                    zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
+                                    min_pulse=cfg.THROTTLE_REVERSE_PWM)
     
-    # V.add(steering, inputs=['angle'])
-    # V.add(throttle, inputs=['throttle'])
+    V.add(steering, inputs=['angle'])
+    V.add(throttle, inputs=['throttle'])
     
     #add tub to save data
     inputs=['cam/image_array', 'user/angle', 'user/throttle', 'user/mode']
