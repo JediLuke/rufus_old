@@ -23,8 +23,7 @@ from donkeycar.parts.keras import KerasCategorical
 from donkeycar.parts.actuator import PCA9685, PWMSteering, PWMThrottle
 from donkeycar.parts.datastore import TubHandler, TubGroup
 from donkeycar.parts.controller import LocalWebController, JoystickController
-from donkeycar.parts.cv import ImgGreyscale
-
+from donkeycar.parts.cv import ImgGreyscale, ImgCrop, AdaptiveThreshold, ImgGaussianBlur, DrawLine, BirdsEyePerspectiveTxfrm
 
 
 def drive(cfg, model_path=None, use_joystick=False):
@@ -42,13 +41,34 @@ def drive(cfg, model_path=None, use_joystick=False):
     V = dk.vehicle.Vehicle()
 
     #Camera
-    #cam = MockCamera(resolution=cfg.CAMERA_RESOLUTION)
-    cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION)
+    cam = MockCamera(resolution=cfg.CAMERA_RESOLUTION)
+    #cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
 
-    #Filter
-    #grey_filter = ImgGreyscale()
-    #V.add(grey_filter, inputs=['cam/image_array'], outputs=['cam/filtered'])
+    #Cropper
+    #ImgCrop works by cropping num pixels in from side of each border
+    mask = ImgCrop(200, 80, 0, 0) #top, bottom, left, right, but it's all backwards because OpenCV
+    V.add(mask, inputs=['cam/image_array'], outputs=['cam/filtered1'])
+
+    #Greyscale filter
+    grey_filter = ImgGreyscale()
+    V.add(grey_filter, inputs=['cam/filtered1'], outputs=['cam/filtered2'])
+
+    #Gaussian blur
+    gaus_blur = ImgGaussianBlur()
+    V.add(gaus_blur, inputs=['cam/filtered2'], outputs=['cam/filtered3'])
+
+    #Adaptive threshold
+    adaptive_thresh = AdaptiveThreshold()
+    V.add(adaptive_thresh, inputs=['cam/filtered3'], outputs=['cam/filtered4'])
+
+    #Birds eye viewpoint transformation
+    birds_eye = BirdsEyePerspectiveTxfrm()
+    V.add(birds_eye, inputs=['cam/filtered4'], outputs=['cam/filtered_final'])
+
+    #Draw line
+    #draw_line = DrawLine((0, 200), (480, 200))
+    #V.add(draw_line, inputs=['cam/filtered4'], outputs=['cam/filtered_final'])
 
     #Controller
     if use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
@@ -62,7 +82,7 @@ def drive(cfg, model_path=None, use_joystick=False):
         #of managing steering, throttle, and modes, and more.
         ctr = LocalWebController()
     V.add(ctr, 
-          inputs=['cam/image_array'],
+          inputs=['cam/filtered_final'],
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
           threaded=True)
     
@@ -83,7 +103,7 @@ def drive(cfg, model_path=None, use_joystick=False):
     if model_path:
         kl.load(model_path)
     
-    V.add(kl, inputs=['cam/image_array'], 
+    V.add(kl, inputs=['cam/filtered_final'], 
           outputs=['pilot/angle', 'pilot/throttle'],
           run_condition='run_pilot')
     
