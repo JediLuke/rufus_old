@@ -297,8 +297,8 @@ var driveHandler = new function() {
           // some pads are NULL I think.. some aren't.. use one that isn't null
           if (pad && pad.timestamp!=0)
           {
-
-            var joystickX = applyDeadzone(pad.axes[2], 0.05);
+            console.log("Hi")
+            var joystickX = applyDeadzone(pad.axes[3], 0.15);
 
             var joystickY = applyDeadzone(pad.axes[1], 0.15);
 
